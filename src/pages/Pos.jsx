@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import API from "../services/api";
-import jsPDF from "jspdf";
 
 function POS() {
   const typingTimeout = useRef(null);
@@ -15,6 +13,7 @@ function POS() {
     const value = e.target.value;
     setBarcode(value);
 
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
     const timeDiff = now - lastInputTime.current;
 
@@ -85,8 +84,6 @@ function POS() {
 
       const discountAmount = (subtotal * discount) / 100;
 
-      const total = subtotal - discountAmount;
-
       await API.post("/sale/create", {
         items,
         paymentMethod: paymentMethod, // required by backend
@@ -121,40 +118,56 @@ function POS() {
  <head>
  <title>Receipt</title>
 
- <style>
+<style>
 
- body{
+@page {
+  size: 58mm auto;
+  margin: 0;
+}
+
+@media print {
+  body {
+    width: 58mm;
+    margin: 0;
+  }
+}
+
+body{
   font-family: monospace;
-  width:300px;
-  margin:auto;
- }
+  width: 58mm;
+  margin: 0;
+  padding: 4px;
+  font-size: 12px;
+}
 
- h2{
+h2{
   text-align:center;
- }
+  font-size:14px;
+}
 
- table{
+table{
   width:100%;
   border-collapse:collapse;
- }
+  font-size:11px;
+}
 
- td{
+td{
   padding:4px 0;
- }
+}
 
- .center{
+.center{
   text-align:center;
- }
+}
 
- .right{
+.right{
   text-align:right;
- }
+}
 
- hr{
+hr{
   border-top:1px dashed black;
- }
+}
 
- </style>
+</style>
 
  </head>
 
@@ -229,18 +242,27 @@ function POS() {
  Thank You! Visit Again
  </p>
 
- <script>
- window.print()
- </script>
+<script>
+window.onload = function() {
+  window.print();
+  window.onafterprint = function() {
+    window.close();
+  };
+};
+</script>
 
  </body>
  </html>
 
  `;
 
-    const win = window.open("", "", "width=400,height=600");
-    win.document.write(billHTML);
-    win.document.close();
+    const win = window.open("", "", "width=300,height=600");
+
+   win.document.write(billHTML);
+   win.document.close();
+   win.focus();
+   win.print();
+   win.close();
   };
   const increaseQty = (barcode) => {
     const updated = cart.map((item) => {

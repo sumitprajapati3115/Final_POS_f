@@ -12,18 +12,17 @@ export default function Products() {
   const [lowStock, setLowStock] = useState(false);
 
   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await API.get("/product/getAllProduct");
+        setProducts(res.data);
+        console.log(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
     fetchProducts();
   }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const res = await API.get("/product/getAllProduct");
-      setProducts(res.data);
-      console.log(products);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   // Filtering logic
   const filteredProducts = products.filter((p) => {

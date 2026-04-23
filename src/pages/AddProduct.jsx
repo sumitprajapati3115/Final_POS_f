@@ -52,45 +52,88 @@ function AddProduct() {
   };
 
   // Universal Print Function for Mobile & Laptop
-  const printBarcodeUniversal = (name, barcode) => {
-    if (isMobile) {
-      // Mobile → RawBT
-      const tspl = `
-SIZE 50 mm,30 mm
+const printBarcodeUniversal = (name, barcode) => {
+  const safeName = (name || "").substring(0, 20);
+
+  if (isMobile) {
+    // ✅ PeriPeri BT-58L (58mm Label Mode)
+    const tspl = `
+SIZE 58 mm,40 mm
 GAP 2 mm,0 mm
 CLS
-TEXT 20,20,"0",0,1,1,"${name.substring(0,20)}"
-BARCODE 20,60,"128",60,1,0,2,2,"${barcode}"
-TEXT 20,140,"0",0,1,1,"${barcode}"
+DIRECTION 1
+
+TEXT 20,20,"0",0,1,1,"${safeName}"
+BARCODE 20,60,"128",50,1,0,1.5,1.5,"${barcode}"
+TEXT 20,130,"0",0,1,1,"${barcode}"
+
 PRINT 1
 `;
 
-      const encoded = encodeURIComponent(tspl);
-      window.location.href = `intent:${encoded}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`;
-    } else {
-      // Laptop → Normal print
-      const barcodeHTML = `
-      <html>
-      <body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:Arial">
-        <div style="text-align:center">
-          <p>${name}</p>
-          <img src="${baseUrl}/product/generateBarcode/${barcode}" />
-          <p>${barcode}</p>
-        </div>
-        <script>
-          window.onload=function(){
-            window.print();
-            window.close();
-          }
-        </script>
-      </body>
-      </html>
-      `;
-      const win = window.open("", "", "width=300,height=300");
-      win.document.write(barcodeHTML);
-      win.document.close();
-    }
-  };
+    const encoded = encodeURIComponent(tspl);
+    window.location.href = `intent:${encoded}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`;
+  } else {
+    // ✅ Laptop Print (Label Style Fixed)
+    const barcodeHTML = `
+    <html>
+    <head>
+      <title>Barcode Label</title>
+      <style>
+        @page {
+          size: 58mm 40mm landscape;
+          margin: 0;
+        }
+        body {
+          width: 58mm;
+          height: 40mm;
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+        }
+        .name {
+          font-size: 13px;
+          font-weight: bold;
+          margin-bottom: 4mm;
+        }
+        .barcode {
+          display: block;
+          margin: 0 auto;
+          width: 48mm;
+          height: 18mm;
+          max-width: 48mm;
+          max-height: 18mm;
+          object-fit: contain;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="name">${name}</div>
+      <img
+        class="barcode"
+        src="${baseUrl}/product/generateBarcode/${barcode}"
+        alt="barcode"
+      />
+      <script>
+        window.onload = function () {
+          window.print();
+          window.onafterprint = () => window.close();
+        };
+      </script>
+    </body>
+    </html>
+    `;
+
+    const win = window.open("", "", "width=600,height=350");
+    win.document.write(barcodeHTML);
+    win.document.close();
+    win.focus();
+  }
+};
 
   const printBarcode = () => {
     printBarcodeUniversal(product.name, product.barcode);
