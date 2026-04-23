@@ -56,22 +56,65 @@ const printBarcodeUniversal = (name, barcode) => {
   const safeName = (name || "").substring(0, 20);
 
   if (isMobile) {
-    // ✅ PeriPeri BT-58L (58mm Label Mode)
-    const tspl = `
-SIZE 58 mm,40 mm
-GAP 2 mm,0 mm
-CLS
-DIRECTION 1
+    // ✅ Mobile Print (Label Style Fixed, Image Only)
+    const barcodeHTML = `
+    <html>
+    <head>
+      <title>Barcode Label</title>
+      <style>
+        @page {
+          size: 58mm 40mm landscape;
+          margin: 0;
+        }
+        body {
+          width: 58mm;
+          height: 40mm;
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+        }
+        .name {
+          font-size: 13px;
+          font-weight: bold;
+          margin-bottom: 4mm;
+        }
+        .barcode {
+          display: block;
+          margin: 0 auto;
+          width: 48mm;
+          height: 18mm;
+          max-width: 48mm;
+          max-height: 18mm;
+          object-fit: contain;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="name">${name}</div>
+      <img
+        class="barcode"
+        src="${baseUrl}/product/generateBarcode/${barcode}"
+        alt="barcode"
+      />
+      <script>
+        window.onload = function () {
+          window.print();
+          window.onafterprint = () => window.close();
+        };
+      </script>
+    </body>
+    </html>
+    `;
 
-TEXT 20,20,"0",0,1,1,"${safeName}"
-BARCODE 20,60,"128",50,1,0,1.5,1.5,"${barcode}"
-TEXT 20,130,"0",0,1,1,"${barcode}"
-
-PRINT 1
-`;
-
-    const encoded = encodeURIComponent(tspl);
-    window.location.href = `intent:${encoded}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`;
+    const win = window.open("", "", "width=600,height=350");
+    win.document.write(barcodeHTML);
+    win.document.close();
+    win.focus();
   } else {
     // ✅ Laptop Print (Label Style Fixed)
     const barcodeHTML = `
