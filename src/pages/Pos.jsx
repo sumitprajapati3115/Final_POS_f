@@ -111,10 +111,9 @@ function POS() {
   // 📱 Detect Mobile
   const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-  // ✅ MOBILE PRINT (RAWBT)
+  // ✅ MOBILE PRINT (RAWBT) - direct print, no preview
   if (isMobile) {
     let itemsText = "";
-
     cart.forEach((item) => {
       itemsText += `${item.name}  x${item.qty}  Rs ${item.sellingPrice * item.qty}\n`;
     });
@@ -136,7 +135,6 @@ PRINT 1
 
     window.location.href =
       "rawbt://print?data=" + encodeURIComponent(prnData);
-
     return;
   }
 
