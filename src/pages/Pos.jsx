@@ -98,172 +98,115 @@ function POS() {
     }
   };
 
-  const generateBill = () => {
-    const subtotal = cart.reduce(
-      (acc, item) => acc + item.sellingPrice * item.qty,
-      0,
-    );
+ const generateBill = () => {
+  const subtotal = cart.reduce(
+    (acc, item) => acc + item.sellingPrice * item.qty,
+    0,
+  );
 
-    const discountAmount = (subtotal * discount) / 100;
+  const discountAmount = (subtotal * discount) / 100;
+  const afterDiscount = subtotal - discountAmount;
+  const total = afterDiscount;
 
-    const afterDiscount = subtotal - discountAmount;
+  // 📱 Detect Mobile
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-    const gst = afterDiscount * 0;
+  // ✅ MOBILE PRINT (RAWBT)
+  if (isMobile) {
+    let itemsText = "";
 
-    const total = afterDiscount + gst;
+    cart.forEach((item) => {
+      itemsText += `${item.name}  x${item.qty}  Rs ${item.sellingPrice * item.qty}\n`;
+    });
 
-    const billHTML = `
- 
- <html>
- <head>
- <title>Receipt</title>
+    const prnData = `
+SIZE 58 mm,200 mm
+GAP 2 mm,0 mm
+CLS
+TEXT 20,20,"0",0,1,1,"PINWEB COSMETICS"
+TEXT 20,50,"0",0,1,1,"Lucknow UP"
+TEXT 20,80,"0",0,1,1,"------------------------"
+TEXT 20,110,"0",0,1,1,"${itemsText}"
+TEXT 20,150,"0",0,1,1,"Subtotal: Rs ${subtotal}"
+TEXT 20,180,"0",0,1,1,"Discount: Rs ${discountAmount.toFixed(2)}"
+TEXT 20,210,"0",0,1,1,"Total: Rs ${total.toFixed(2)}"
+TEXT 20,240,"0",0,1,1,"Thank You!"
+PRINT 1
+    `;
 
-<style>
+    window.location.href =
+      "rawbt://print?data=" + encodeURIComponent(prnData);
 
-@page {
-  size: 58mm auto;
-  margin: 0;
-}
-
-@media print {
-  body {
-    width: 58mm;
-    margin: 0;
+    return;
   }
-}
 
-body{
-  font-family: monospace;
-  width: 58mm;
-  margin: 0;
-  padding: 4px;
-  font-size: 12px;
-}
+  // 💻 LAPTOP PRINT (same as your old code)
+  const billHTML = `
+  <html>
+  <head>
+  <title>Receipt</title>
+  <style>
+  @page { size: 58mm auto; margin: 0; }
+  body{ font-family: monospace; width: 58mm; margin:0; padding:4px; font-size:12px;}
+  h2{text-align:center;font-size:14px;}
+  table{width:100%;border-collapse:collapse;font-size:11px;}
+  td{padding:4px 0;}
+  .center{text-align:center;}
+  .right{text-align:right;}
+  hr{border-top:1px dashed black;}
+  </style>
+  </head>
 
-h2{
-  text-align:center;
-  font-size:14px;
-}
+  <body>
+  <h2>PINWEB COSMETICS</h2>
+  <p class="center">Lucknow, Uttar Pradesh</p>
+  <hr/>
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:11px;
-}
+  <table>
+  <tr><td>Item</td><td class="right">Qty</td><td class="right">Price</td></tr>
 
-td{
-  padding:4px 0;
-}
+  ${cart
+    .map(
+      (item) => `
+  <tr>
+  <td>${item.name}</td>
+  <td class="right">${item.qty}</td>
+  <td class="right">Rs ${item.sellingPrice * item.qty}</td>
+  </tr>`
+    )
+    .join("")}
 
-.center{
-  text-align:center;
-}
+  </table>
 
-.right{
-  text-align:right;
-}
+  <hr/>
 
-hr{
-  border-top:1px dashed black;
-}
+  <table>
+  <tr><td>Subtotal</td><td class="right">Rs ${subtotal}</td></tr>
+  <tr><td>Discount</td><td class="right">Rs ${discountAmount.toFixed(2)}</td></tr>
+  <tr><td><b>Total</b></td><td class="right"><b>Rs ${total.toFixed(2)}</b></td></tr>
+  </table>
 
-</style>
+  <hr/>
+  <p class="center">Thank You!</p>
 
- </head>
-
- <body>
-
- <h2>PINWEB COSMETICS</h2>
-
- <p class="center">
- Lucknow, Uttar Pradesh<br>
- GSTIN: 09XXXXX1234Z5
- </p>
-
- <hr/>
-
- <table>
-
- <tr>
- <td>Item</td>
- <td class="right">Qty</td>
- <td class="right">Price</td>
- </tr>
-
- ${cart
-   .map(
-     (item) => `
- <tr>
- <td>${item.name}</td>
- <td class="right">${item.qty}</td>
- <td class="right">Rs ${item.sellingPrice * item.qty}</td>
- </tr>
- `,
-   )
-   .join("")}
-
- </table>
-
- <hr/>
-
- <table>
-
- <tr>
-<td>Subtotal</td>
-<td class="right">Rs ${subtotal}</td>
-</tr>
-
-<tr>
-<td>Discount (${discount}%)</td>
-<td class="right">- Rs ${discountAmount.toFixed(2)}</td>
-</tr>
-
-<tr>
-<td>After Discount</td>
-<td class="right">Rs ${afterDiscount.toFixed(2)}</td>
-</tr>
-
-
-<tr>
-<td>Payment</td>
-<td class="right">${paymentMethod.toUpperCase()}</td>
-</tr>
-
-<tr>
-<td><b>Total</b></td>
-<td class="right"><b>Rs ${total.toFixed(2)}</b></td>
-</tr>
-
- </table>
-
- <hr/>
-
- <p class="center">
- Thank You! Visit Again
- </p>
-
-<script>
-window.onload = function() {
-  window.print();
-  window.onafterprint = function() {
-    window.close();
+  <script>
+  window.onload = function() {
+    window.print();
+    window.onafterprint = function() {
+      window.close();
+    };
   };
+  </script>
+
+  </body>
+  </html>
+  `;
+
+  const win = window.open("", "", "width=300,height=600");
+  win.document.write(billHTML);
+  win.document.close();
+  win.focus();
 };
-</script>
-
- </body>
- </html>
-
- `;
-
-    const win = window.open("", "", "width=300,height=600");
-
-   win.document.write(billHTML);
-   win.document.close();
-   win.focus();
-   win.print();
-   win.close();
-  };
   const increaseQty = (barcode) => {
     const updated = cart.map((item) => {
       if (item.barcode === barcode) {
@@ -478,63 +421,3 @@ window.onload = function() {
 }
 
 export default POS;
-
-//   const generateBill = () => {
-//     const doc = new jsPDF();
-
-//     let y = 20;
-
-//     doc.setFontSize(16);
-//     doc.text("My Cosmetic Shop", 80, y);
-
-//     y += 10;
-//     doc.setFontSize(10);
-//     doc.text("Lucknow, Uttar Pradesh", 80, y);
-
-//     y += 10;
-//     doc.text("Invoice", 95, y);
-
-//     y += 15;
-
-//     doc.text("Item", 20, y);
-//     doc.text("Qty", 100, y);
-//     doc.text("Price", 120, y);
-//     doc.text("Total", 160, y);
-
-//     y += 5;
-//     doc.line(20, y, 190, y);
-
-//     y += 10;
-
-//     cart.forEach((item) => {
-//       const itemTotal = item.price * item.qty;
-//       const gst = itemTotal * 0;
-
-//       doc.text(item.name, 20, y);
-//       doc.text(String(item.qty), 100, y);
-//       doc.text(`Rs. ${item.price}`, 120, y);
-//       doc.text(`Rs. ${itemTotal}`, 160, y);
-
-//       y += 10;
-//     });
-
-//     y += 10;
-//     doc.line(20, y, 190, y);
-
-//     y += 10;
-
-//     const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-//     const gstTotal = subtotal * 0;
-//     const grandTotal = subtotal + gstTotal;
-
-//     doc.text(`Subtotal: Rs. ${subtotal}`, 140, y);
-
-//     y += 10;
-//     doc.text(`GST (18%): Rs. ${gstTotal.toFixed(2)}`, 140, y);
-
-//     y += 10;
-//     doc.setFontSize(12);
-//     doc.text(`Total: Rs. ${grandTotal.toFixed(2)}`, 140, y);
-
-//     doc.save("bill.pdf");
-//   };
