@@ -1,4 +1,3 @@
-const baseUrl = "https://pos-b-zitv.onrender.com/api";
-// const baseUrl = "http://localhost:3000/api";
-
+const baseUrl = "https://final-pos-b.onrender.com/api";
+ //const baseUrl = "srv-d7ksptm8bjmc73ddku4g/api";
 export default baseUrl;
